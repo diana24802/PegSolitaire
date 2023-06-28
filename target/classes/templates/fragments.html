@@ -1,0 +1,127 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="css/stylesheet.css">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+
+</head>
+
+<div th:fragment="footer" class="footer">
+    <hr style="background-color: #78e4ff"/>
+    PegSolitaire © 2023 | <a href="mailto:diana.orsolyova@student.tuke.sk">Contact developer</a>
+</div>
+
+<span th:fragment="profile-logout">
+    <span th:if="${@mainController.logged}">
+        <span th:text="${@mainController.getLoggedProfile().getLogin()}"></span>
+        <button onclick="logout()">Logout</button>
+    </span>
+</span>
+
+<div th:fragment="score-table" id="score-table" style="display: none;" class="jquery-table">
+    <h2>Scores</h2>
+    <script>
+        $(document).ready(function () {
+            $('#clientSideScoreTable').DataTable({
+                columns: [
+                    {data: "player"},
+                    {data: "points"},
+                    {data: "boardMode"},
+                    {
+                        data: "playedAt",
+                        render: function (data) {
+                            return formatDate(data);
+                        }
+                    },
+                    {data: "time"}
+                ],
+                ajax: {url: "/api/score/PegSolitaire", dataSrc: ''}
+            });
+        });
+    </script>
+    <table id="clientSideScoreTable">
+        <thead>
+        <tr>
+            <th>Player</th>
+            <th>Points</th>
+            <th>Board Mode</th>
+            <th>Played at</th>
+            <th>Time</th>
+        </tr>
+        </thead>
+    </table>
+</div>
+
+<div th:fragment="comment-table" id="comment-table" style="display: none;" class="jquery-table">
+    <div th:if="${@mainController.isLogged()}" class="comment-container">
+        <form action="/add-comment" method="post" style="width: 100%; display: flex">
+            <input type="text" name="comment" placeholder="Type a comment..." class="comment-input">
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+
+    <h2>Comments</h2>
+    <script>
+        $(document).ready(function () {
+            $('#clientSideCommentTable').DataTable({
+                columns: [
+                    {data: "player"},
+                    {data: "comment"},
+                    {
+                        data: "commentedAt",
+                        render: function (data) {
+                            return formatDate(data);
+                        }
+                    }
+                ],
+                ajax: {url: "/api/comment/PegSolitaire", dataSrc: ''}
+            });
+        });
+    </script>
+    <table id="clientSideCommentTable">
+        <thead>
+        <tr>
+            <th>Player</th>
+            <th>Comment</th>
+            <th>Commented at</th>
+        </tr>
+        </thead>
+    </table>
+
+</div>
+
+<div th:fragment="rating-table" id="rating-table" style="display: none;">
+    <h2>Average Rating</h2>
+    <span th:text="${@ratingServiceRest.getAverageRating('PegSolitaire')}"/>/5<br>
+    <div class="star-container" th:if="${@mainController.isLogged()}">
+        <a href="/add-rating?rating=5"><img src="images/pegsolitaire/empty_star.png" class="star"/></a>
+        <a href="/add-rating?rating=4"><img src="images/pegsolitaire/empty_star.png" class="star"/></a>
+        <a href="/add-rating?rating=3"><img src="images/pegsolitaire/empty_star.png" class="star"/></a>
+        <a href="/add-rating?rating=2"><img src="images/pegsolitaire/empty_star.png" class="star"/></a>
+        <a href="/add-rating?rating=1"><img src="images/pegsolitaire/empty_star.png" class="star"/></a>
+    </div>
+</div>
+
+</html>
+
+<script>
+    function logout() {
+        window.location.href = '/logout';
+    }
+
+    function formatDate(dateString) {
+        var date = new Date(dateString);
+        var day = String(date.getDate()).padStart(2, '0');
+        var month = String(date.getMonth() + 1).padStart(2, '0');
+        var year = date.getFullYear();
+        var hours = String(date.getHours()).padStart(2, '0');
+        var minutes = String(date.getMinutes()).padStart(2, '0');
+
+        return day + '.' + month + '.' + year + ' ' + hours + ':' + minutes;
+    }
+</script>

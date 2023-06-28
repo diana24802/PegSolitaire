@@ -1,0 +1,33 @@
+GET http://localhost:8080/api/score/PegSolitaire
+Accept: application/json
+
+###
+GET http://localhost:8080/api/comment/PegSolitaire
+Accept: application/json
+
+###
+GET http://localhost:8080/api/rating/PegSolitaire
+Accept: application/json
+
+###
+POST http://localhost:8080/api/score
+Content-Type: application/json
+
+{
+  "player": "test1score",
+  "game": "PegSolitaire",
+  "boardMode": "CustomBoard",
+  "points": 23,
+  "playedAt": "2019-03-03T12:40:40"
+}
+
+###
+POST http://localhost:8080/api/comment
+Content-Type: application/json
+
+{
+  "player": "test1comment",
+  "game": "PegSolitaire",
+  "comment": "commentcommentcommentcommentcomment",
+  "commentedAt": "2019-03-03T12:40:40"
+}

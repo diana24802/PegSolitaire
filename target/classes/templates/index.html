@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en" class="welcome-page">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Peg Solitaire</title>
+    <link rel="icon" href="images/pegsolitaire/peg.ico">
+    <link rel="stylesheet" href="css/stylesheet.css">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+</head>
+<body class="welcome-page">
+
+<div class="full-height-grid">
+    <div class="logo-container">
+        <img src="images/pegsolitaire/logo.png" alt="Logo" id="logo">
+    </div>
+    <div class="form-container" th:if="not ${@mainController.logged}">
+        <form id="login-form" action="/login" method="post">
+            <input type="text" placeholder="Profile Name" name="login" required><br>
+            <input type="password" placeholder="Password" name="password" id="password-input" required><br>
+            <button type="submit">Register / Log In</button>
+        </form>
+    </div>
+
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <form id="boardForm">
+                <label for="boardType">Board type:</label>
+                <select id="boardType" name="boardType">
+                    <option value="Asymmetrical">Asymmetrical</option>
+                    <option value="Custom">Custom</option>
+                    <option value="Diamond">Diamond</option>
+                    <option value="English">English</option>
+                    <option value="European">European</option>
+                    <option value="German">German</option>
+                </select>
+                <div id="customSize" style="display: none;">
+                    <label for="rowCount">Row count:</label>
+                    <input type="number" id="rowCount" name="rowCount" min="4" max="15" value="4">
+                    <label for="columnCount">Column count:</label>
+                    <input type="number" id="columnCount" name="columnCount" min="4" max="15" value="4">
+                </div>
+                <button type="submit" id="createBoard">Create board</button>
+                <button type="button" id="randomBoard">Random board</button>
+            </form>
+        </div>
+    </div>
+
+    <div th:replace="fragments::profile-logout"></div>
+
+    <div th:if="${@mainController.isLogged()}">
+        <button th:if="${@pegSolitaireController.isBoardInitialized()}" onclick="continueGame()">Continue</button>
+        <button id="openModal">New Game</button>
+    </div>
+
+</div>
+<div>
+    <img src="images/pegsolitaire/scores.png" class="ui-button" onclick="toggleTable('score-table')"/>
+    <img src="images/pegsolitaire/comment.png" class="ui-button" onclick="toggleTable('comment-table')"/>
+    <img src="images/pegsolitaire/rating.png" class="ui-button" onclick="toggleTable('rating-table')"/>
+
+    <div th:replace="fragments::score-table"></div>
+    <div th:replace="fragments::comment-table"></div>
+    <div th:replace="fragments::rating-table"></div>
+</div>
+
+<div th:replace="fragments::footer" class="footer"></div>
+
+</body>
+</html>
+<script>
+    function logout() {
+        window.location.href = '/logout';
+    }
+
+    function continueGame() {
+        window.location.href = '/pegsolitaire';
+    }
+
+    let currentVisibleTable = null;
+
+    function toggleTable(tableId) {
+        if (currentVisibleTable) {
+            document.getElementById(currentVisibleTable).style.display = 'none';
+        }
+
+        const table = document.getElementById(tableId);
+        if (table.style.display === 'none' || currentVisibleTable !== tableId || currentVisibleTable === null) {
+            table.style.display = 'block';
+            currentVisibleTable = tableId;
+        } else {
+            table.style.display = 'none';
+            currentVisibleTable = null;
+        }
+    }
+
+    function formatDate(dateString) {
+        var date = new Date(dateString);
+        var day = String(date.getDate()).padStart(2, '0');
+        var month = String(date.getMonth() + 1).padStart(2, '0');
+        var year = date.getFullYear();
+        var hours = String(date.getHours()).padStart(2, '0');
+        var minutes = String(date.getMinutes()).padStart(2, '0');
+
+        return day + '.' + month + '.' + year + ' ' + hours + ':' + minutes;
+    }
+
+    document.getElementById("openModal").onclick = function () {
+        document.getElementById("modal").style.display = "block";
+    }
+
+    document.getElementsByClassName("close")[0].onclick = function () {
+        document.getElementById("modal").style.display = "none";
+    }
+
+    document.getElementById("boardType").onchange = function () {
+        if (this.value === "Custom") {
+            document.getElementById("customSize").style.display = "block";
+        } else {
+            document.getElementById("customSize").style.display = "none";
+        }
+    }
+
+    document.getElementById("createBoard").onclick = function (e) {
+        e.preventDefault();
+        const boardType = document.getElementById("boardType").value;
+        let url = "/pegsolitaire/new?boardType=" + boardType;
+
+        if (boardType === "Custom") {
+            const rowCount = document.getElementById("rowCount").value;
+            const columnCount = document.getElementById("columnCount").value;
+            url += "&rowCount=" + rowCount + "&columnCount=" + columnCount;
+        }
+        window.location.href = url;
+    }
+
+    document.getElementById("randomBoard").onclick = function (e){
+        e.preventDefault();
+        const boardValue = Math.floor(Math.random() * (6 - 1 + 1)) + 1;
+        let boardType;
+        if (boardValue === 1) {
+            boardType = "Asymmetrical";
+        }else if (boardValue === 2) {
+            boardType = "Custom";
+        }else if (boardValue === 3) {
+            boardType = "Diamond";
+        }else if (boardValue === 4) {
+            boardType = "English";
+        }else if (boardValue === 5) {
+            boardType = "European";
+        }else if (boardValue === 6) {
+            boardType = "German";
+        }
+        let url = "/pegsolitaire/new?boardType=" + boardType;
+
+        if (boardType === "Custom") {
+            const rowCount = Math.floor(Math.random() * (15 - 4 + 1)) + 4;
+            const columnCount = Math.floor(Math.random() * (15 - 4 + 1)) + 4;
+            url += "&rowCount=" + rowCount + "&columnCount=" + columnCount;
+        }
+        window.location.href = url;
+    }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!--&lt;!&ndash;console.log("random");&ndash;&gt;-->
+<!--// const rowCount = document.getElementById("rowCount").value;-->
+<!--// const columnCount = document.getElementById("columnCount").value;-->
+<!--// url += "&rowCount=" + rowCount + "&columnCount=" + columnCount;-->

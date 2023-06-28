@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Game</title>
+    <link rel="icon" href="images/pegsolitaire/peg.ico">
+    <link rel="stylesheet" href="css/stylesheet.css">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+
+    <script type="text/javascript">
+        //<![CDATA[
+        $(document).ready(function () {
+            refreshBoard("/pegsolitaire/board");
+        });
+
+        function refreshBoard(url) {
+            $.ajax({
+                url: url,
+            }).done(function (html) {
+                $("#boardFromService").html(html);
+                $.ajax({
+                    url: "/pegsolitaire/score",
+                    dataType: "json"
+                }).done(function (scoreData) {
+                    $("#scoreDisplay").text("Score: " + scoreData.score);
+                });
+                // Initialize draggable and droppable elements
+                $(".peg").draggable({
+                    revert: "invalid",
+                    containment: "#boardFromService"
+                });
+                $(".hole").droppable({
+                    accept: ".peg",
+                    drop: function (event, ui) {
+                        // Get the start row and column from the dragged peg
+                        const startRow = parseInt(ui.draggable.data("row"));
+                        const startCol = parseInt(ui.draggable.data("col"));
+
+                        // Get the destination row and column from the dropped hole
+                        const destRow = parseInt($(this).data("row"));
+                        const destCol = parseInt($(this).data("col"));
+
+                        // Make an AJAX request with the start and destination coordinates
+                        const moveUrl = `/pegsolitaire/board?row=${startRow}&column=${startCol}&destRow=${destRow}&destCol=${destCol}`;
+                        refreshBoard(moveUrl);
+                    }
+                });
+
+                //Kedze som nechcel upravit generovnie pola s a href, tak odstranujem atribut href a pridavam click
+                $("#boardFromService a").each(function () {
+                    const url = $(this).attr("href").replace("/pegsolitaire", "/pegsolitaire/board");
+                    $(this).removeAttr("href");
+                    $(this).click(function () {
+                        refreshBoard(url);
+                    });
+                })
+            });
+        }
+    </script>
+</head>
+<body>
+<span class="header">
+        <img src="images/pegsolitaire/logo.png" class="logo" onclick="navigateToRoot()"/>
+        <span th:replace="fragments::profile-logout"></span>
+    </span><br>
+
+<!--<span th:utext="${@pegSolitaireController.getHtmlBoard()}"></span>-->
+<div th:if="${@mainController.isLogged()}" id="boardFromService">
+</div>
+<div th:if="${@mainController.isLogged()}">
+    <div id="scoreDisplay">Score: 0</div>
+</div>
+
+<div th:replace="fragments::footer" class="footer"></div>
+
+</body>
+</html>
+<script>
+    function navigateToRoot() {
+        window.location.href = "/";
+    }
+
+    function navigateToNewGame() {
+        window.location.href = "/pegsolitaire/new";
+    }
+
+    function logout() {
+        window.location.href = '/logout';
+    }
+
+</script>
